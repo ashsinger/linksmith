@@ -1,0 +1,18 @@
+[package]
+name = "marklink"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ashsinger <celestial.ashsinger@gmail.com>"]
+description = "A command-line tool that converts MediaWiki-style links to Markdown-style links in your collection of Markdown files."
+readme = "README.md"
+homepage = "https://github.com/ashsinger/linksmith"
+repository = "https://github.com/ashsinger/linksmith"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.1.9", features = ["derive"] }
+indicatif = "0.17.3"
+regex = "1.7.1"
+walkdir = "2.3.3"
+prettytable-rs = "0.10.0"
+colored = "2.0.0"
