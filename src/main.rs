@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 fn normalize_filename(filename: &str) -> String {
     filename
         .to_lowercase()
-        .replace(" ", "_")
+        .replace(' ', "_")
         .replace(|c: char| !c.is_ascii_alphanumeric() && c != '_', "")
 }
 
@@ -19,7 +19,7 @@ fn replace_links(content: &str, link_pattern: &Regex, index: &HashMap<String, St
     link_pattern
         .replace_all(content, |caps: &regex::Captures| {
             let link = caps.name("link").unwrap().as_str();
-            let key = link.to_lowercase().replace(" ", "_");
+            let key = link.to_lowercase().replace(' ', "_");
             let relative_path = index.get(&key).unwrap_or(&key);
             let alt_text = caps
                 .name("alt_text")
@@ -83,9 +83,9 @@ fn main() {
             .into_owned();
         let key = relative_path
             .trim_end_matches(".md")
-            .replace("/", "_")
+            .replace('/', "_")
             .to_lowercase()
-            .replace(" ", "_");
+            .replace(' ', "_");
         index.insert(key, relative_path);
     }
 
