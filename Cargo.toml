@@ -1,5 +1,5 @@
 [package]
-name = "marklink"
+name = "linksmith"
 version = "1.0.0"
 edition = "2021"
 authors = ["Ashsinger <celestial.ashsinger@gmail.com>"]
