@@ -5,64 +5,66 @@ on:
     branches: [main]
 
 jobs:
-  build_and_test:
-    name: Build and Test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        target: [aarch64-apple-darwin, x86_64-unknown-linux-gnu]
-        exclude:
-        - os: ubuntu-latest
-          target: aarch64-apple-darwin
-        - os: macos-latest
-          target: x86_64-unknown-linux-gnu
+  build_linux:
+    runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
-      RUSTFLAGS: ${{ matrix.target == 'x86_64-unknown-linux-gnu' && '-C link-arg=-Wl,--as-needed' || '' }}
-
+      RUSTFLAGS: -C link-arg=-Wl,--as-needed
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
       with:
-        profile: minimal
         toolchain: stable
+        target: x86_64-unknown-linux-gnu
+        profile: minimal
         override: true
-        target: ${{ matrix.rust_target }}
-
-    - name: Add aarch64 target for Rust
-      run: rustup target add aarch64-apple-darwin
-      if: startsWith(matrix.os, 'macOS')
-
-    - name: Run cargo fmt
-      uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: -- --check
-
-    - name: Run cargo clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --all-targets --all-features -- -D warnings
-
-    - name: Run cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose
-
-    - name: Build release binary
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release --target ${{ matrix.rust_target }}
-
+    - name: Format
+      run: cargo fmt --all -- --check
+    - name: Lint
+      run: cargo clippy --all-targets -- -D warnings
+    - name: Test
+      run: cargo test
+    - name: Build
+      run: cargo build --release --target x86_64-unknown-linux-gnu
     - name: Upload release binary
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.rust_target }}
-        path: target/${{ matrix.rust_target }}/release/markdown-link-converter
+        name: x86_64-unknown-linux-gnu
+        path: target/x86_64-unknown-linux-gnu/release/linksmith
+
+  build_universal:
+    runs-on: macos-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+    - name: Add targets
+      run: |
+        rustup target add x86_64-apple-darwin
+        rustup target add aarch64-apple-darwin
+    - name: Format
+      run: cargo fmt --all -- --check
+    - name: Lint
+      run: cargo clippy --all-targets -- -D warnings
+    - name: Test
+      run: cargo test
+    - name: Build
+      run: |
+        cargo build --release --target x86_64-apple-darwin
+        cargo build --release --target aarch64-apple-darwin
+    - name: Create universal binary
+      run: |
+        mkdir -p target/universal/release
+        lipo -create -output target/universal/release/linksmith \
+            target/x86_64-apple-darwin/release/linksmith \
+            target/aarch64-apple-darwin/release/linksmith
+    - name: Upload release binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: universal-darwin
+        path: target/universal/release/linksmith
