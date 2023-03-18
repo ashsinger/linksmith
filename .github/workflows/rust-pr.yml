@@ -4,45 +4,33 @@ on:
   pull_request:
 
 jobs:
-  build_and_test:
-    name: Build and Test
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        rust_target: [x86_64-unknown-linux-gnu, aarch64-apple-darwin]
+        target: [aarch64-apple-darwin, x86_64-unknown-linux-gnu]
+        exclude:
+        - os: ubuntu-latest
+          target: aarch64-apple-darwin
+        - os: macos-latest
+          target: x86_64-unknown-linux-gnu
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: ${{ matrix.target == 'x86_64-unknown-linux-gnu' && '-C link-arg=-Wl,--as-needed' || '' }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
       with:
-        profile: minimal
         toolchain: stable
+        target: ${{ matrix.target }}
+        profile: minimal
         override: true
-        target: ${{ matrix.rust_target }}
-
-    - name: Run cargo fmt
-      uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: -- --check
-
-    - name: Run cargo clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --all-targets --all-features -- -D warnings
-
-    - name: Run cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose
-
-    - name: Build release binary
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release --target ${{ matrix.rust_target }}
+    - name: Lint
+      run: cargo clippy --all-targets -- -D warnings
+    - name: Test
+      run: cargo test --target ${{ matrix.target }}
+    - name: Format
+      run: cargo fmt --all -- --check
+    - name: Build
+      run: cargo build --release --target ${{ matrix.target }}
