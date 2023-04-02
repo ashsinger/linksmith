@@ -94,6 +94,26 @@ jobs:
 
     - name: Download universal binary
       uses: actions/download-artifact@v2
+      
+    - name: Upload Linux binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.REL_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release/linux/linksmith
+        asset_name: linksmith-x86_64-unknown-linux-gnu
+        asset_content_type: application/octet-stream
+
+    - name: Upload universal binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.REL_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release/dar/linksmith
+        asset_name: linksmith-universal-darwin
+        asset_content_type: application/octet-stream
       with:
         name: universal-darwin
         path: release/dar
