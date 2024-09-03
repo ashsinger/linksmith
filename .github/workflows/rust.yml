@@ -87,13 +87,13 @@ jobs:
         prerelease: false
 
     - name: Download Linux binary
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: x86_64-unknown-linux-gnu
         path: release/linux
 
     - name: Download universal binary
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: universal-darwin
         path: release/dar
